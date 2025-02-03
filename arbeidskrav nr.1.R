@@ -105,6 +105,6 @@ ggplot(combined_data_filtered, aes(x = Date)) +
 
 # Kort forklaring av grafen:
 # Garfen viser hvordan den globale temperaturen endrer seg over tid, basert på en 12-måneders glidende
-# gjenomsnitt. De ulike fargete linjene representerer temperaturavvik for forkjellige ag av atmosfæren.
+# gjenomsnitt. De ulike fargete linjene representerer temperaturavvik for forkjellige lag av atmosfæren.
 # De svarte stripene viser gjennomsnittet. 
 
