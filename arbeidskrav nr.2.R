@@ -121,4 +121,15 @@ ggplot(table_clean, aes(x = WLTP, y = STOP)) +
   ) +
   theme_minimal()
 
+# After “running” the code, how do you interpret the two values on the customized line?
+
+# slope: Dette er stigningstallet, som viser oss endringer for stop for de ulike enhetsendringene i WLTP.
+
+# intercept: Dette er skjæringspunktet der regresjonslinjen krysser y-aksen 
+
+# intercept: Dette betyr hvis for eksempel intercept er 200, så vil at hvis WLTP er 0, så kommer stope være 200 km.
+# Dette kan vi tolke som startverdien for den faktiske rekkevidden. 
+
+# slop: Dette betys at hvis for eksempel 0,8, betyr at for hver 1 km WLTP øker, så øker den rekkevidden (stop)
+# med 0.8 km, noe som visser osss at bilen genrelt kjører kortere en forventet. 
 
