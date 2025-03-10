@@ -1,0 +1,288 @@
+---
+title: "arbeidskrav nr.3.R"
+format: html
+editor: visual
+---
+
+## Quarto
+
+Quarto enables you to weave together content and executable code into a finished document. To learn more about Quarto see <https://quarto.org>.
+
+## Running Code
+
+When you click the **Render** button a document will be generated that includes both content and the output of embedded code. You can embed code like this:
+
+```{r}
+rm(list=ls())
+library(readxl)
+library(tidyverse)
+library(lubridate)
+library(zoo)
+library(dplyr)
+library(gapminder)
+library(ggplot2)
+```
+
+```{r}
+library(readxl)
+
+library(readxl)
+
+# List alle arkene i Excel-filen
+excel_sheets <- excel_sheets("/Users/patrick/Documents/datavitenskap/R/f319e1c8-5654-4cd6-b4c7-5722ae437d30-Ukraine_Support_Tracker_Release_21.xlsx")
+print(excel_sheets)
+
+# Les inn data fra det spesifikke arket, for eksempel 'Country Summary (€)'
+data <- read_excel("/Users/patrick/Documents/datavitenskap/R/f319e1c8-5654-4cd6-b4c7-5722ae437d30-Ukraine_Support_Tracker_Release_21.xlsx", sheet = "Fig 6. With Refugee Support, €",  skip = 7)
+```
+
+```{r}
+data <- data %>%
+  filter(!is.na(Country)) %>%
+  select(Country, Financial, Humanitarian, Military, `Refugee cost estimation`) %>%
+  rename(Refugee = `Refugee cost estimation`)
+```
+
+```{r}
+data_long <- pivot_longer(
+  data,
+  cols = c(Financial, Humanitarian, Military, Refugee),
+  names_to = "Type",
+  values_to = "Amount"
+)
+```
+
+```{r}
+# Fjern "Total" fra datasetet
+data_long <- data_long %>%
+  filter(Country != "Total")
+
+# Plott data med mykere farger
+ggplot(data_long, aes(x = reorder(Country, Amount, sum), y = Amount, fill = Type)) +
+  geom_bar(stat = "identity", position = "stack") +
+  scale_fill_manual(values = c(
+    "Financial" = "#1f78b4",  # Myk blå
+    "Humanitarian" = "#e31a1c",  # Lys korallrød
+    "Military" = "#33a02c",  # Dus blågrønn
+    "Refugee" = "#ffcc00"  # Myk gul
+  )) +
+  labs(title = "Total Bilateral Commitments Plus Refugee Costs",
+       x = "Country",
+       y = "Total Allocations (billion €)") +
+  coord_flip() +  # Beholder landene på y-aksen for bedre lesbarhet
+  theme_minimal() +
+  theme(
+    axis.text.y = element_text(size = 6),
+    axis.title.x = element_text(size = 8, color = "gray40"),
+    axis.title.y = element_text(size = 8, color = "gray40"),
+    legend.text = element_text(size = 10, color = "gray40"),
+    panel.grid.major = element_line(color = "gray85"),
+    panel.grid.minor = element_line(color = "gray90"),
+    panel.background = element_rect(fill = "white")
+  )
+```
+
+task 2
+
+```{r}
+# Last inn data
+url <- "https://raw.githubusercontent.com/ywchiu/rcookbook/master/chapter7/superstore_sales.csv"
+data_2 <- read.csv(url)
+```
+
+```{r}
+str(data_2)
+```
+
+```{r}
+library(dplyr)
+library(ggplot2)
+
+# Konvertere Order.Date til dato-objekt hvis nødvendig
+data_2$Order.Date <- as.Date(data_2$Order.Date, format = "%Y/%m/%d")
+
+# Lage en ny kolonne for måned
+data_2$Month <- format(data_2$Order.Date, "%m")
+
+# Gruppere data etter måned og summere salgene
+monthly_sales <- data_2 %>% group_by(Month) %>% summarise(TotalSales = sum(Sales))
+
+# Sortere data etter måned for korrekt rekkefølge i plottet
+monthly_sales <- monthly_sales %>% arrange(Month)
+
+# Lage søylediagram for å vise totalt salg per måned
+ggplot(monthly_sales, aes(x = Month, y = TotalSales, fill = Month)) +
+  geom_col() +
+  theme_minimal() +
+  labs(title = "Totalt salg per måned", x = "Måned", y = "Totalt salg")
+```
+
+```{r}
+
+# Gruppere data etter provins og summere salgene
+province_sales <- data_2 %>% group_by(Province) %>% summarise(TotalSales = sum(Sales))
+
+# Lage søylediagram for å vise totalt salg per provins
+ggplot(province_sales, aes(x = reorder(Province, TotalSales), y = TotalSales/1e6, fill = Province)) +
+  geom_col() +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +  # Rotere tekstetikettene på x-aksen
+  scale_y_continuous(labels = scales::comma) +  # Formaterer y-aksen med komma for tusenvis
+  labs(title = "Totalt salg per provins (i millioner)", x = "Provins", y = "Totalt salg (Millioner)")
+```
+
+```{r}
+
+
+# Gruppere data etter provins og produktkategori, deretter summere salgene
+category_sales_per_province <- data_2 %>% group_by(Province, Product.Category) %>% summarise(TotalSales = sum(Sales))
+
+ggplot(category_sales_per_province, aes(x = Product.Category, y = TotalSales, fill = Product.Category)) +
+  geom_col() +
+  facet_wrap(~Province, scales = "free_y") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1),
+        strip.text.x = element_text(size = 8),
+        axis.text.y = element_text(size = 10)) +
+  scale_y_continuous(labels = scales::comma) +  # Formaterer y-aksen til å bruke komma som tusenskilletegn
+  labs(title = "Salg per produktkategori i hver provins", x = "Produktkategori", y = "Totalt salg")#
+```
+
+task 3
+
+```{r}
+
+print(gapminder)
+```
+
+```{r}
+  
+# oppgave a)
+
+# Filtrere dataene for Asia
+asia_data <- gapminder %>% 
+  filter(continent == "Asia")
+
+# Beregne minste og største forventede levealder for hvert år
+life_expectancy_stats <- asia_data %>% 
+  group_by(year) %>% 
+  summarise(
+    Min_Life_Expectancy = min(lifeExp),
+    Max_Life_Expectancy = max(lifeExp)
+  )
+
+# Skrive ut resultatene
+print(life_expectancy_stats)
+```
+
+```{r}
+
+# oppgave b)
+
+# Filtrere dataene for Asia
+asia_data <- gapminder %>% 
+  filter(continent == "Asia")
+
+# Beregne minste og største forventede levealder for hvert år
+life_expectancy_stats <- asia_data %>% 
+  group_by(year) %>% 
+  summarise(
+    Min_Life_Expectancy = min(lifeExp),
+    Max_Life_Expectancy = max(lifeExp)
+  )
+
+# Beregne logaritmisk differanse mellom påfølgende år for minste og største levealder
+life_expectancy_stats <- life_expectancy_stats %>%
+  mutate(
+    Log_Diff_Min = log(Min_Life_Expectancy) - lag(log(Min_Life_Expectancy)),
+    Log_Diff_Max = log(Max_Life_Expectancy) - lag(log(Max_Life_Expectancy))
+  )
+
+# Skrive ut resultatene
+print(life_expectancy_stats)
+```
+
+```{r}
+
+# oppgave c)
+
+# Beregne gjennomsnittlig levealder og BNP for hvert land
+average_data <- gapminder %>% 
+  group_by(country) %>% 
+  summarise(
+    Average_Life_Expectancy = mean(lifeExp, na.rm = TRUE),
+    Average_GDP = mean(gdpPercap, na.rm = TRUE)
+  )
+
+# Sortere og begrense til de 20 øverste landene basert på gjennomsnittlig levealder
+top_life_expectancy <- average_data %>% 
+  arrange(desc(Average_Life_Expectancy)) %>% 
+  top_n(20, Average_Life_Expectancy)
+
+# Lage et punktdiagram for levealder
+ggplot(top_life_expectancy, aes(x = reorder(country, -Average_Life_Expectancy), y = Average_Life_Expectancy)) +
+  geom_point() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+  labs(title = "Top 20 Countries by Average Life Expectancy", x = "Country", y = "Average Life Expectancy")
+
+# Sortere og begrense til de 20 øverste landene basert på gjennomsnittlig BNP
+top_gdp <- average_data %>% 
+  arrange(desc(Average_GDP)) %>% 
+  top_n(20, Average_GDP)
+
+# Lage et punktdiagram for BNP
+ggplot(top_gdp, aes(x = reorder(country, -Average_GDP), y = Average_GDP)) +
+  geom_point() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+  labs(title = "Top 20 Countries by Average GDP", x = "Country", y = "Average GDP")
+```
+
+```{r}
+
+# oppgave d)
+
+# Beregne gjennomsnittlig levealder og BNP for hvert land
+average_data <- gapminder %>% 
+  group_by(country, continent) %>% 
+  summarise(
+    Average_Life_Expectancy = mean(lifeExp, na.rm = TRUE),
+    Average_GDP = mean(gdpPercap, na.rm = TRUE),
+    .groups = 'drop'
+  )
+
+# Lage et punktdiagram med logaritmiske akser
+ggplot(average_data, aes(x = Average_GDP, y = Average_Life_Expectancy, color = continent)) +
+  geom_point() +
+  scale_x_log10(label = scales::comma) + # Logaritmisk skala for x-aksen
+  scale_y_continuous(trans = 'log10', label = scales::comma) + # Logaritmisk skala for y-aksen
+  labs(title = "Average Life Expectancy vs. GDP by Country",
+       x = "Average GDP (Log Scale)",
+       y = "Average Life Expectancy (Log Scale)",
+       color = "Continent") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) # Justere tekst på x-aksen for bedre lesbarhet
+```
+
+```{r}
+
+# oppgave e)
+
+# Beregne endring i levealder for hvert land over hver 5-årsperiode
+life_expectancy_changes <- gapminder %>%
+  group_by(country, continent) %>%
+  arrange(year) %>%
+  mutate(Change = lifeExp - lag(lifeExp, default = first(lifeExp))) %>%
+  filter(year %in% c(1952, 1957, 1962, 1967, 1972, 1977, 1982, 1987, 1992, 1997, 2002, 2007))
+
+# Identifisere landet med det største fallet i levealder hver 5-årsperiode for hvert kontinent
+sharpest_drops <- life_expectancy_changes %>%
+  group_by(continent, year) %>%
+  summarize(
+    Country_with_Sharp_Drop = country[which.min(Change)],
+    Sharp_Drop_Value = min(Change),
+    .groups = 'drop'
+  )
+
+# Vis resultatene
+print(sharpest_drops)
+```
